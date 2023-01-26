@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 # Project
 project(Galaxy_simulation)
+set(OpenGL_GL_PREFERENCE LEGACY)
 
 # Sources
 file(GLOB_RECURSE SOURCES sources/*.cpp)

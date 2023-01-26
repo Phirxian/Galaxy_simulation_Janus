@@ -4,6 +4,7 @@
 std::vector<dim::Vector4>	Computer::positions;
 std::vector<dim::Vector4>	Computer::speeds;
 std::vector<dim::Vector4>	Computer::accelerations;
+
 cl::Buffer					Computer::positions_buffer;
 cl::Buffer					Computer::speeds_buffer;
 cl::Buffer					Computer::accelerations_buffer;
@@ -31,6 +32,7 @@ void Computer::create_galaxy(int i)
 {
 	positions[i].set_norm(static_cast<float>(pow(positions[i].get_norm() / (Simulator::galaxy_diameter / 2.f), 5)) * (Simulator::galaxy_diameter / 2.f));
 	positions[i].y *= Simulator::galaxy_thickness / Simulator::galaxy_diameter;
+	positions[i].w = dim::random_float(-1.0f, 1.0f) < 0.0 ? -1.0 : 1.0;
 	speeds[i] = dim::Vector4(dim::normalize(dim::Vector3(positions[i]) ^ dim::Vector3(0.f, 1.f, 0.f)) * Simulator::stars_speed, 0.f);
 }
 
@@ -39,11 +41,14 @@ void Computer::create_collision(int i)
 	create_galaxy(i);
 
 	if (i % 2)
+  {
 		positions[i].x -= Simulator::galaxies_distance / 2.f;
-
+		positions[i].w = -1.0;
+  }
 	else
 	{
 		positions[i].x += Simulator::galaxies_distance / 2.f;
+		positions[i].w = 1.0;
 		std::swap(positions[i].y, positions[i].z);
 		std::swap(speeds[i].y, speeds[i].z);
 	}
@@ -68,7 +73,8 @@ void Computer::init()
 
 	for (int i = 0; i < Simulator::nb_stars; i++)
 	{
-		positions[i] = dim::Vector4(random_sphere(), 0.f);
+		positions[i] = dim::Vector4(random_sphere(), 0.0);
+		positions[i].w = dim::random_float(-1.0f, 1.0f) < 0.0 ? -1.0 : 1.0;
 
 		switch (Simulator::simulation_type)
 		{

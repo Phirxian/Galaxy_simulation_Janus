@@ -28,17 +28,27 @@ __kernel void interactions(__global float4* positions, __global float4* accelera
 {
 	int index = get_global_id(0);
 	float3 acc = (float3)(0, 0, 0);
+  float mass_a = positions[index].w;
 
 	for (int i = 0; i < *interaction_rate * get_global_size(0); i++)
 	{
 		if (i != index)
 		{
+      float mass_b = positions[i].w;
+
 			float3 vector = convert_3(positions[i]) - convert_3(positions[index]);
-			acc += (normalize(vector) / (norm_2(vector) + *smoothing_length)) / *interaction_rate;
+      float3 current = (normalize(vector) / (norm_2(vector) + *smoothing_length)) / *interaction_rate;
+
+      if (mass_a < 0.0 && mass_b < 0.0)
+          acc += current;
+      else if (mass_a > 0.0 && mass_b > 0.0)
+          acc += current;
+      else
+          acc -= 2.0f*current; // * (mass_a*mass_b);
 		}
 	}
 
-	acc += (*black_hole_mass * normalize(-convert_3(positions[index]))) / (norm_2(convert_3(positions[index])) + *smoothing_length);
+	acc += mass_a * (*black_hole_mass * normalize(-convert_3(positions[index]))) / (norm_2(convert_3(positions[index])) + *smoothing_length);
 	accelerations[index] = convert_4(acc);
 }
 
